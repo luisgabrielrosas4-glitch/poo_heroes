@@ -1,157 +1,66 @@
 @startuml
-!theme plain
+title T07 - Ruta corta y Green Goblin
 skinparam classAttributeIconSize 0
-skinparam nodesep 60
-skinparam ranksep 60
 skinparam linetype ortho
 
-' ==========================================
-' ENUMERACIONES Y COMPONENTES BASE
-' ==========================================
-enum NivelDificultad {
-  FACIL
-  MEDIO
-  DIFICIL
-}
-
-' ==========================================  
-' JERARQUÍA DE PERSONAJES Y VILLANOS
-' ==========================================
-abstract class Personaje <<abstract>> {
-  # nombre: String
-  + getNombre(): String
-}
-
-abstract class Heroe <<abstract>> {
-  # saldo: Integer
-  + Heroe(nombre: String, saldo: Integer)
-  + consultarSaldo(): Integer
-  + acreditarRecompensa(m: Mision): Boolean
-  + pagar(costo: Integer): Boolean
-}
-
-class Batman {
-  + comprarPista(a: Ayudante, m: Mision): Boolean
-  + resolverMision(m: Mision, respuesta: String): Boolean
-}
-
-abstract class Villano <<abstract>> {
-  # tipoRetoEspecialidad: String
-  + {abstract} complicarReto(r: Reto): void
-  + plantearMision(r: Reto): Mision
-}
-
-class Joker {
-  + complicarReto(r: Reto): void
-}
-
-class GreenGoblin {
-  + complicarReto(r: Reto): void
-  + aplicar(r: Reto): Boolean
-  + plantearMision(id: String, r: Reto): Mision
-}
-
-abstract class Ayudante <<abstract>> {
-  # costoPista: int
-  + darPista(m: Mision): String
-}
-
-class Alfred {
-  - pistas: List<Pista>
-  + obtenerPista(i: Integer): String
-}
-
-Personaje <|-- Heroe
-Personaje <|-- Villano
-Personaje <|-- Ayudante
-Heroe <|-- Batman
-Villano <|-- Joker
-Villano <|-- GreenGoblin
-Ayudante <|-- Alfred
-
-' ==========================================
-' JERARQUÍA DE RETOS MATEMÁTICOS
-' ==========================================
-abstract class Reto <<abstract>> {
+abstract class Reto {
   # descripcion: String
   # dificultad: NivelDificultad
-  + {abstract} evaluarRespuesta(respuesta: String): Boolean
-  + {abstract} generarProblema(): void
-  + aumentarDificultad(): void
-  + getDificultad(): NivelDificultad
-  + setDificultad(d: NivelDificultad): void
-}
-
-class RetoSecuencia {
-  - patronNumerico: List<Integer>
-  + evaluarRespuesta(respuesta: String): Boolean
-  + generarProblema(): void
-}
-
-class RetoOrdenamiento {
-  - elementosDesordenados: List<Integer>
-  + evaluarRespuesta(respuesta: String): Boolean
+  + evaluarRespuesta(respuesta: String): boolean
   + generarProblema(): void
 }
 
 class RetoRutaCorta {
-  - grafo: Map<String, Map<String, Integer>>
+  - grafo: Map
   - origen: String
   - destino: String
-  + agregarTramo(a: String, b: String, costo: Integer): void
-  + costoMinimo(): Long
-  + bloquearTramo(a: String, b: String): Boolean
-  + evaluarRespuesta(respuesta: String): Boolean
+  + RetoRutaCorta()
+  + RetoRutaCorta(origen: String, destino: String)
+  + agregarTramo(a: String, b: String, costo: int): void
+  + costoMinimo(): long
+  + bloquearTramo(a: String, b: String): boolean
+  + evaluarRespuesta(respuesta: String): boolean
   + generarProblema(): void
 }
 
-Reto <|-- RetoSecuencia
-Reto <|-- RetoOrdenamiento
-Reto <|-- RetoRutaCorta
-
 interface Dificultad {
-  + aplicar(r: Reto): Boolean
+  + aplicar(reto: Reto): boolean
 }
-GreenGoblin ..|> Dificultad
-Reto --> NivelDificultad
 
-' ==========================================
-' ESTRUCTURA DEL JUEGO Y MISIóN
-' ==========================================
-class Partida {
-  - recompensasGlobales: Integer
-  + iniciarJuego(): void
-  + agregarMision(m: Mision): void
+abstract class Villano {
+  # tipoRetoEspecialidad: String
+  + complicarReto(reto: Reto): void
+  + plantearMision(id: String, reto: Reto): Mision
+}
+
+class GreenGoblin {
+  - a: String
+  - b: String
+  + GreenGoblin()
+  + GreenGoblin(a: String, b: String)
+  + aplicar(reto: Reto): boolean
+  + complicarReto(reto: Reto): void
+  + plantearMision(id: String, reto: Reto): Mision
 }
 
 class Mision {
-  - id: String
-  - estado: String = "activa"
-  - recompensa: Integer
-  - errores: Integer = 0
-  - {static} LIMITE_ERRORES: Integer = 3
-  + consultarEstado(): String
-  + getEstado(): String
-  + consultarIntentosRestantes(): Integer
-  + aplicarDificultad(d: Dificultad): Boolean
-  + procesarIntento(respuesta: String): Boolean
-  + completar(): void
+  - estado: String
+  - reto: Reto
+  + Mision(id: String, reto: Reto)
+  + aplicarDificultad(d: Dificultad): boolean
 }
 
-class Pista {
-  - texto: String
-  - precio: Integer
-  + getTexto(): String
-}
+Reto <|-- RetoRutaCorta
+Villano <|-- GreenGoblin
+Dificultad <|.. GreenGoblin
+Mision --> Reto : contiene
+Mision ..> Dificultad : aplica si está activa
+GreenGoblin ..> RetoRutaCorta : bloquea un tramo
 
-Partida "1" *-- "0..*" Mision : coordina >
-Mision "1" *-- "1" Reto : contiene >
-Mision ..> Dificultad
-Mision "1" *-- "0..*" Pista : ofrece >
-
-' RELACIONES DE INTERACCIÓN
-Heroe "0..*" -right-> "1" Ayudante : pide ayuda >
-Villano "1" -down-> "1..*" Reto : altera / complica >
-Batman "1" ..> "0..*" Partida : juega >
-
+note right of RetoRutaCorta
+  El grafo guarda los tramos y sus costos.
+  Se usa Dijkstra para el camino mínimo.
+  Python: agregar_tramo(), costo_minimo(),
+  bloquear_tramo(), evaluar_respuesta().
+end note
 @enduml
