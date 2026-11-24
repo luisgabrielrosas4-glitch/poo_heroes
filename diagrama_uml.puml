@@ -1,154 +1,65 @@
 @startuml
-!theme plain
+title T06 - Recompensas de misiones
 skinparam classAttributeIconSize 0
-skinparam nodesep 60
-skinparam ranksep 60
 skinparam linetype ortho
 
-' ==========================================
-' ENUMERACIONES Y COMPONENTES BASE
-' ==========================================
-enum NivelDificultad {
-  FACIL
-  MEDIO
-  DIFICIL
-}
-
-' ==========================================  
-' JERARQUÍA DE PERSONAJES Y VILLANOS
-' ==========================================
-abstract class Personaje <<abstract>> {
+abstract class Personaje {
   # nombre: String
-  + getNombre(): String
 }
 
-abstract class Heroe <<abstract>> {
-  # saldo: Integer
-  + Heroe(nombre: String, saldo: Integer)
-  + consultarSaldo(): Integer
-  + acreditarRecompensa(m: Mision): Boolean
-  + pagar(costo: Integer): Boolean
+abstract class Heroe {
+  # saldo: int
+  + consultarSaldo(): int
+  + acreditarRecompensa(m: Mision): boolean
 }
 
 class Batman {
-  + comprarPista(a: Ayudante, m: Mision): Boolean
-  + resolverMision(m: Mision, respuesta: String): Boolean
-}
-
-abstract class Villano <<abstract>> {
-  # tipoRetoEspecialidad: String
-  + {abstract} complicarReto(r: Reto): void
-  + plantearMision(r: Reto): Mision
-}
-
-class Joker {
-  + complicarReto(r: Reto): void
-}
-
-class GreenGoblin {
-  + complicarReto(r: Reto): void
-}
-
-abstract class Ayudante <<abstract>> {
-  # costoPista: int
-  + darPista(m: Mision): String
-}
-
-class Alfred {
-  - pistas: List<Pista>
-  + obtenerPista(i: Integer): String
-}
-
-Personaje <|-- Heroe
-Personaje <|-- Villano
-Personaje <|-- Ayudante
-Heroe <|-- Batman
-Villano <|-- Joker
-Villano <|-- GreenGoblin
-Ayudante <|-- Alfred
-
-' ==========================================
-' JERARQUÍA DE RETOS MATEMÁTICOS
-' ==========================================
-abstract class Reto <<abstract>> {
-  # descripcion: String
-  # dificultad: NivelDificultad
-  + {abstract} evaluarRespuesta(respuesta: String): Boolean
-  + {abstract} generarProblema(): void
-  + aumentarDificultad(): void
-  + getDificultad(): NivelDificultad
-  + setDificultad(d: NivelDificultad): void
-}
-
-class RetoSecuencia {
-  - patronNumerico: List<Integer>
-  + evaluarRespuesta(respuesta: String): Boolean
-  + generarProblema(): void
-}
-
-class RetoOrdenamiento {
-  - elementosDesordenados: List<Integer>
-  + evaluarRespuesta(respuesta: String): Boolean
-  + generarProblema(): void
-}
-
-class RetoRutaCorta {
-  - grafoNodos: String
-  - origen: String
-  - destino: String
-  + evaluarRespuesta(respuesta: String): Boolean
-  + generarProblema(): void
-}
-
-Reto <|-- RetoSecuencia
-Reto <|-- RetoOrdenamiento
-Reto <|-- RetoRutaCorta
-Reto --> NivelDificultad
-
-' ==========================================
-' ESTRUCTURA DEL JUEGO Y MISIóN
-' ==========================================
-class Partida {
-  - recompensasGlobales: Integer
-  + iniciarJuego(): void
-  + agregarMision(m: Mision): void
-  + acreditarRecompensa(h: Heroe, m: Mision): Boolean
-  + getRecompensasGlobales(): Integer
+  + resolverMision(m: Mision, respuesta: String): boolean
 }
 
 class Mision {
   - id: String
-  - estado: String = "activa"
-  - recompensa: Integer
-  - recompensaAcreditada: Boolean = false
-  - errores: Integer = 0
-  - {static} LIMITE_ERRORES: Integer = 3
+  - estado: String
+  - reto: Reto
+  - recompensa: int
+  - recompensaAcreditada: boolean
   + Mision(id: String, reto: Reto)
-  + Mision(id: String, reto: Reto, recompensa: Integer)
-  + consultarEstado(): String
-  + getEstado(): String
-  + getRecompensa(): Integer
-  + isRecompensaAcreditada(): Boolean
-  + marcarRecompensaAcreditada(): Boolean
-  + consultarIntentosRestantes(): Integer
-  + procesarIntento(respuesta: String): Boolean
+  + Mision(id: String, reto: Reto, recompensa: int)
   + completar(): void
+  + getRecompensa(): int
+  + isRecompensaAcreditada(): boolean
+  + marcarRecompensaAcreditada(): boolean
 }
 
-class Pista {
-  - texto: String
-  - precio: Integer
-  + getTexto(): String
+class Partida {
+  - misiones: List<Mision>
+  - recompensasGlobales: int
+  + agregarMision(m: Mision): void
+  + acreditarRecompensa(h: Heroe, m: Mision): boolean
+  + getRecompensasGlobales(): int
 }
 
-Partida "1" *-- "0..*" Mision : coordina >
-Partida ..> Heroe : acredita recompensa >
-Mision "1" *-- "1" Reto : contiene >
-Mision "1" *-- "0..*" Pista : ofrece >
+abstract class Reto {
+  + evaluarRespuesta(respuesta: String): boolean
+}
 
-' RELACIONES DE INTERACCIÓN
-Heroe "0..*" -right-> "1" Ayudante : pide ayuda >
-Villano "1" -down-> "1..*" Reto : altera / complica >
-Batman "1" ..> "0..*" Partida : juega >
+Personaje <|-- Heroe
+Heroe <|-- Batman
+Mision --> Reto : contiene
+Partida "1" o-- "0..*" Mision : guarda
+Heroe ..> Mision : cobra
+Partida ..> Heroe : acredita
 
+note right of Mision
+  Guarda el monto y si ya se pagó.
+  No paga si está activa, bloqueada
+  o si la recompensa ya se cobró.
+end note
+
+note bottom of Partida
+  Suma el total solamente cuando
+  el héroe acredita la recompensa.
+  En Python los métodos usan
+  nombres con guion bajo.
+end note
 @enduml
