@@ -1,145 +1,39 @@
 @startuml
-!theme plain
+title T05 - Reto de secuencias
 skinparam classAttributeIconSize 0
-skinparam nodesep 60
-skinparam ranksep 60
 skinparam linetype ortho
 
-' ==========================================
-' ENUMERACIONES Y COMPONENTES BASE
-' ==========================================
 enum NivelDificultad {
   FACIL
   MEDIO
   DIFICIL
 }
 
-' ==========================================  
-' JERARQUÍA DE PERSONAJES Y VILLANOS
-' ==========================================
-abstract class Personaje <<abstract>> {
-  # nombre: String
-  + getNombre(): String
-}
-
-abstract class Heroe <<abstract>> {
-  # saldo: Integer
-  + Heroe(nombre: String, saldo: Integer)
-  + consultarSaldo(): Integer
-  + acreditarRecompensa(m: Mision): Boolean
-  + pagar(costo: Integer): Boolean
-}
-
-class Batman {
-  + comprarPista(a: Ayudante, m: Mision): Boolean
-  + resolverMision(m: Mision, respuesta: String): Boolean
-}
-
-abstract class Villano <<abstract>> {
-  # tipoRetoEspecialidad: String
-  + {abstract} complicarReto(r: Reto): void
-  + plantearMision(r: Reto): Mision
-}
-
-class Joker {
-  + complicarReto(r: Reto): void
-}
-
-class GreenGoblin {
-  + complicarReto(r: Reto): void
-}
-
-abstract class Ayudante <<abstract>> {
-  # costoPista: int
-  + darPista(m: Mision): String
-}
-
-class Alfred {
-  - pistas: List<Pista>
-  + obtenerPista(i: Integer): String
-}
-
-Personaje <|-- Heroe
-Personaje <|-- Villano
-Personaje <|-- Ayudante
-Heroe <|-- Batman
-Villano <|-- Joker
-Villano <|-- GreenGoblin
-Ayudante <|-- Alfred
-
-' ==========================================
-' JERARQUÍA DE RETOS MATEMÁTICOS
-' ==========================================
-abstract class Reto <<abstract>> {
+abstract class Reto {
   # descripcion: String
   # dificultad: NivelDificultad
-  + {abstract} evaluarRespuesta(respuesta: String): Boolean
-  + {abstract} generarProblema(): void
+  + evaluarRespuesta(respuesta: String): boolean
+  + generarProblema(): void
   + aumentarDificultad(): void
-  + getDificultad(): NivelDificultad
-  + setDificultad(d: NivelDificultad): void
 }
 
 class RetoSecuencia {
   - patronNumerico: List<Integer>
-  + evaluarRespuesta(respuesta: String): Boolean
+  - respuestaEsperada: int
+  + RetoSecuencia(dificultad: NivelDificultad)
   + generarProblema(): void
-}
-
-class RetoOrdenamiento {
-  - elementosDesordenados: List<Integer>
-  + evaluarRespuesta(respuesta: String): Boolean
-  + generarProblema(): void
-}
-
-class RetoRutaCorta {
-  - grafoNodos: String
-  - origen: String
-  - destino: String
-  + evaluarRespuesta(respuesta: String): Boolean
-  + generarProblema(): void
+  + mostrarSecuencia(): String
+  + evaluarRespuesta(respuesta: String): boolean
 }
 
 Reto <|-- RetoSecuencia
-Reto <|-- RetoOrdenamiento
-Reto <|-- RetoRutaCorta
 Reto --> NivelDificultad
 
-' ==========================================
-' ESTRUCTURA DEL JUEGO Y MISIóN
-' ==========================================
-class Partida {
-  - recompensasGlobales: Integer
-  + iniciarJuego(): void
-  + agregarMision(m: Mision): void
-}
-
-class Mision {
-  - id: String
-  - estado: String = "activa"
-  - recompensa: Integer
-  - errores: Integer = 0
-  - {static} LIMITE_ERRORES: Integer = 3
-  + consultarEstado(): String
-  + getEstado(): String
-  + consultarIntentosRestantes(): Integer
-  + procesarIntento(respuesta: String): Boolean
-  + completar(): void
-}
-
-class Pista {
-  - texto: String
-  - precio: Integer
-  + getTexto(): String
-}
-
-Partida "1" *-- "0..*" Mision : coordina >
-Mision "1" *-- "1" Reto : contiene >
-Mision "1" *-- "0..*" Pista : ofrece >
-
-' RELACIONES DE INTERACCIÓN
-Heroe "0..*" -right-> "1" Ayudante : pide ayuda >
-Villano "1" -down-> "1..*" Reto : altera / complica >
-Batman "1" ..> "0..*" Partida : juega >
-
+note right of RetoSecuencia
+  En Python se llaman:
+  patron_numerico, respuesta_esperada
+  generar_problema()
+  mostrar_secuencia()
+  evaluar_respuesta()
+end note
 @enduml
