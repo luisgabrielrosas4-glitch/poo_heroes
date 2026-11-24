@@ -1,3 +1,5 @@
+import java.util.concurrent.atomic.AtomicInteger;
+
 public class TestRecompensaMision {
     static class RetoPrueba extends Reto {
         RetoPrueba() { super("Prueba", NivelDificultad.FACIL); }
@@ -9,7 +11,91 @@ public class TestRecompensaMision {
         if (!ok) throw new AssertionError(caso);
     }
 
-    public static void main(String[] args) {
+    static void pruebaConcurrencia() throws InterruptedException {
+        Partida partida = new Partida();
+        Batman heroe = new Batman();
+        Mision[] misiones = new Mision[800];
+        for (int i = 0; i < misiones.length; i++) {
+            misiones[i] = new Mision("paralela" + i, new RetoPrueba(), 3);
+            partida.agregarMision(misiones[i]);
+            misiones[i].completar();
+        }
+        AtomicInteger aciertos = new AtomicInteger();
+        Thread[] hilos = new Thread[8];
+        for (int hilo = 0; hilo < hilos.length; hilo++) {
+            final int inicio = hilo;
+            hilos[hilo] = new Thread(() -> {
+                for (int i = inicio; i < misiones.length; i += 8) {
+                    boolean cobro = (i % 2 == 0)
+                            ? heroe.acreditarRecompensa(misiones[i])
+                            : partida.acreditarRecompensa(heroe, misiones[i]);
+                    if (cobro) aciertos.incrementAndGet();
+                }
+            });
+            hilos[hilo].start();
+        }
+        for (Thread hilo : hilos) hilo.join();
+        comprobar(aciertos.get() == 800, "todos los cobros simultaneos");
+        comprobar(heroe.consultarSaldo() == 2500, "saldo simultaneo");
+        comprobar(partida.getRecompensasGlobales() == 2400, "total simultaneo");
+
+        Batman compartido = new Batman();
+        Partida[] partidas = new Partida[400];
+        Mision[] distintas = new Mision[400];
+        for (int i = 0; i < distintas.length; i++) {
+            partidas[i] = new Partida();
+            distintas[i] = new Mision("distinta" + i, new RetoPrueba(), 2);
+            partidas[i].agregarMision(distintas[i]);
+            distintas[i].completar();
+        }
+        Thread[] otros = new Thread[8];
+        for (int hilo = 0; hilo < 8; hilo++) {
+            final int inicio = hilo;
+            otros[hilo] = new Thread(() -> {
+                for (int i = inicio; i < distintas.length; i += 8) {
+                    if (!compartido.acreditarRecompensa(distintas[i]))
+                        throw new AssertionError("cobro de partida distinta");
+                }
+            });
+            otros[hilo].start();
+        }
+        for (Thread hilo : otros) hilo.join();
+        comprobar(compartido.consultarSaldo() == 900, "saldo compartido entre partidas");
+        int total = 0;
+        for (Partida p : partidas) total += p.getRecompensasGlobales();
+        comprobar(total == 800, "suma de partidas");
+    }
+
+    static void pruebaDesbordamiento() {
+        Partida p = new Partida();
+        Heroe lleno = new Heroe("Lleno", Integer.MAX_VALUE, 3) {};
+        Mision m = new Mision("lleno", new RetoPrueba(), 30);
+        p.agregarMision(m);
+        m.completar();
+        comprobar(!p.acreditarRecompensa(lleno, m), "saldo no desborda");
+        comprobar(lleno.consultarSaldo() == Integer.MAX_VALUE, "saldo intacto");
+        comprobar(!m.isRecompensaAcreditada() && p.getRecompensasGlobales() == 0,
+                "mision no pagada ante error de saldo");
+        Batman normal = new Batman();
+        comprobar(normal.acreditarRecompensa(m), "se permite reintentar");
+
+        Partida otra = new Partida();
+        Heroe desdeCero = new Heroe("Cero", 0, 3) {};
+        Mision grande = new Mision("grande", new RetoPrueba(), Integer.MAX_VALUE);
+        otra.agregarMision(grande);
+        grande.completar();
+        comprobar(desdeCero.acreditarRecompensa(grande), "monto maximo permitido");
+        Mision extra = new Mision("extra", new RetoPrueba(), 1);
+        otra.agregarMision(extra);
+        extra.completar();
+        Batman batman = new Batman();
+        comprobar(!otra.acreditarRecompensa(batman, extra), "total global no desborda");
+        comprobar(!extra.isRecompensaAcreditada(), "extra sin marcar");
+        comprobar(batman.consultarSaldo() == 100, "batman no recibe extra");
+        comprobar(otra.getRecompensasGlobales() == Integer.MAX_VALUE, "total maximo intacto");
+    }
+
+    public static void main(String[] args) throws InterruptedException {
         Partida partida = new Partida();
         Batman batman = new Batman();
         Batman otro = new Batman();
@@ -85,6 +171,8 @@ public class TestRecompensaMision {
         comprobar(otraPartida.getRecompensasGlobales() == 0, "otra partida sin premio");
         comprobar(!hDirecto.acreditarRecompensa(bloqueada), "bloqueada directa");
         comprobar(batman.consultarSaldo() == 180 && partida.getRecompensasGlobales() == 80, "totales originales");
+        pruebaDesbordamiento();
+        pruebaConcurrencia();
         System.out.println("Pruebas de recompensas correctas");
     }
 }

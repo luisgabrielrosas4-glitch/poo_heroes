@@ -1,4 +1,5 @@
 import unittest
+from concurrent.futures import ThreadPoolExecutor
 from mision import Mision
 from personajes import Batman
 from partida import Partida
@@ -108,12 +109,97 @@ class TestRecompensas(unittest.TestCase):
         self.assertTrue(batman.acreditar_recompensa(mision))
         self.assertEqual((primera.recompensas_globales, segunda.recompensas_globales), (30, 0))
 
+    def test_fallo_en_entrega_no_deja_mision_pagada(self):
+        class HeroeConFallo(Batman):
+            def _recibir_recompensa(self, cantidad):
+                self.saldo += cantidad
+                raise RuntimeError("Fallo de prueba")
+
+        partida, heroe = Partida(), HeroeConFallo()
+        mision = Mision("fallo", RetoPrueba(), 30)
+        partida.agregar_mision(mision)
+        mision.completar()
+        self.assertFalse(partida.acreditar_recompensa(heroe, mision))
+        self.assertEqual((heroe.consultar_saldo(), partida.recompensas_globales), (100, 0))
+        self.assertFalse(mision.recompensa_acreditada)
+        self.assertTrue(Batman().acreditar_recompensa(mision))
+        self.assertEqual(partida.recompensas_globales, 30)
+
+    def test_heroe_incorrecto(self):
+        partida = Partida()
+        mision = Mision("no heroe", RetoPrueba(), 30)
+        partida.agregar_mision(mision)
+        mision.completar()
+        self.assertFalse(partida.acreditar_recompensa(object(), mision))
+        self.assertFalse(mision.recompensa_acreditada)
+        self.assertEqual(partida.recompensas_globales, 0)
+
+    def test_saldo_fuera_de_limite(self):
+        partida = Partida()
+        heroe = Batman()
+        heroe.saldo = 2147483647
+        mision = Mision("muy grande", RetoPrueba(), 30)
+        partida.agregar_mision(mision)
+        mision.completar()
+        self.assertFalse(partida.acreditar_recompensa(heroe, mision))
+        self.assertFalse(mision.recompensa_acreditada)
+        self.assertEqual((heroe.saldo, partida.recompensas_globales), (2147483647, 0))
+        self.assertTrue(Batman().acreditar_recompensa(mision))
+        self.assertEqual(partida.recompensas_globales, 30)
+
+    def test_total_fuera_de_limite(self):
+        partida = Partida()
+        grande = Mision("grande", RetoPrueba(), 2147483647)
+        partida.agregar_mision(grande)
+        grande.completar()
+        heroe = Batman()
+        heroe.saldo = 0
+        self.assertTrue(heroe.acreditar_recompensa(grande))
+        extra = Mision("extra", RetoPrueba(), 1)
+        partida.agregar_mision(extra)
+        extra.completar()
+        otro = Batman()
+        self.assertFalse(partida.acreditar_recompensa(otro, extra))
+        self.assertEqual((otro.saldo, partida.recompensas_globales), (100, 2147483647))
+        self.assertFalse(extra.recompensa_acreditada)
+
+    def test_cobros_paralelos(self):
+        partida, heroe = Partida(), Batman()
+        misiones = [Mision(str(i), RetoPrueba(), 3) for i in range(800)]
+        for mision in misiones:
+            partida.agregar_mision(mision)
+            mision.completar()
+        def cobrar(par):
+            i, mision = par
+            return (heroe.acreditar_recompensa(mision) if i % 2 == 0
+                    else partida.acreditar_recompensa(heroe, mision))
+        with ThreadPoolExecutor(max_workers=8) as pool:
+            resultado = list(pool.map(cobrar, enumerate(misiones)))
+        self.assertEqual(sum(resultado), 800)
+        self.assertEqual(heroe.consultar_saldo(), 2500)
+        self.assertEqual(partida.recompensas_globales, 2400)
+
+    def test_varias_partidas_mismo_heroe(self):
+        heroe = Batman()
+        partidas = [Partida() for _ in range(400)]
+        misiones = [Mision(str(i), RetoPrueba(), 2) for i in range(400)]
+        for partida, mision in zip(partidas, misiones):
+            partida.agregar_mision(mision)
+            mision.completar()
+        with ThreadPoolExecutor(max_workers=8) as pool:
+            resultado = list(pool.map(heroe.acreditar_recompensa, misiones))
+        self.assertEqual(sum(resultado), 400)
+        self.assertEqual(heroe.consultar_saldo(), 900)
+        self.assertEqual(sum(p.recompensas_globales for p in partidas), 800)
+
     def test_recompensa_invalida(self):
         with self.assertRaises(ValueError):
             Mision("8", RetoPrueba(), 0)
         with self.assertRaises(ValueError):
             Mision("8", RetoPrueba(), -3)
         self.assertEqual(Mision("9", RetoPrueba()).recompensa, 10)
+        with self.assertRaises(ValueError):
+            Mision("10", RetoPrueba(), 2147483648)
 
 if __name__ == "__main__":
     unittest.main()
