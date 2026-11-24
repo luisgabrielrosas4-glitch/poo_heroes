@@ -10,16 +10,16 @@ class Partida:
     def agregar_mision(self, mision: Mision) -> None:
         if mision is None or mision.partida is not None:
             return
-        mision.asignar_partida(self)
+        mision._asignar_partida(self)
         self.misiones.append(mision)
 
     def acreditar_recompensa(self, heroe: Heroe, mision: Mision) -> bool:
         if (heroe is None or mision is None or mision.partida is not self
                 or not any(m is mision for m in self.misiones)):
             return False
-        if not mision.marcar_recompensa_acreditada():
+        if not mision._marcar_recompensa_acreditada():
             return False
-        heroe.recibir_recompensa(mision.recompensa)
+        heroe._recibir_recompensa(mision.recompensa)
         self.recompensas_globales += mision.recompensa
         return True
 

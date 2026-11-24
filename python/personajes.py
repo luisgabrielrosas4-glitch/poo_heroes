@@ -28,7 +28,7 @@ class Heroe(Personaje, ABC):
             return False
         return mision.partida.acreditar_recompensa(self, mision)
 
-    def recibir_recompensa(self, cantidad):
+    def _recibir_recompensa(self, cantidad):
         self.saldo += cantidad
 
 

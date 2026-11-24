@@ -38,11 +38,11 @@ class Mision:
         if self.estado == "activa":
             self.estado = "completada"
 
-    def asignar_partida(self, partida):
+    def _asignar_partida(self, partida):
         if self.partida is None:
             self.partida = partida
 
-    def marcar_recompensa_acreditada(self) -> bool:
+    def _marcar_recompensa_acreditada(self) -> bool:
         if self.estado != "completada" or self.recompensa_acreditada:
             return False
         self.recompensa_acreditada = True

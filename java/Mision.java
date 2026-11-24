@@ -65,7 +65,7 @@ public class Mision {
     public int getRecompensa() { return recompensa; }
     public boolean isRecompensaAcreditada() { return recompensaAcreditada; }
 
-    public boolean marcarRecompensaAcreditada() {
+    boolean marcarRecompensaAcreditada() {
         if (!"completada".equals(estado) || recompensaAcreditada) return false;
         recompensaAcreditada = true;
         return true;

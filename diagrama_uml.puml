@@ -34,7 +34,7 @@ class Mision {
   ~ asignarPartida(partida: Partida): void
   + getRecompensa(): int
   + isRecompensaAcreditada(): boolean
-  + marcarRecompensaAcreditada(): boolean
+  ~ marcarRecompensaAcreditada(): boolean
 }
 
 class Partida {
