@@ -28,7 +28,7 @@ public class Mision {
         this.partida = null;
     }
 
-    public boolean procesarIntento(String respuesta) {
+    public synchronized boolean procesarIntento(String respuesta) {
         if (!"activa".equals(estado)) {
             return false;
         }
@@ -43,35 +43,37 @@ public class Mision {
         return false;
     }
 
-    public int consultarIntentosRestantes() {
+    public synchronized int consultarIntentosRestantes() {
         if (!"activa".equals(estado)) {
             return 0;
         }
         return Math.max(0, LIMITE_ERRORES - errores);
     }
 
-    public void completar() {
+    public synchronized void completar() {
         if ("activa".equals(estado)) {
             estado = "completada";
         }
     }
 
-    public Partida getPartida() { return partida; }
+    public synchronized Partida getPartida() { return partida; }
 
-    void asignarPartida(Partida partida) {
-        if (this.partida == null) this.partida = partida;
+    synchronized boolean asignarPartida(Partida nuevaPartida) {
+        if (partida != null || nuevaPartida == null) return false;
+        partida = nuevaPartida;
+        return true;
     }
 
     public int getRecompensa() { return recompensa; }
-    public boolean isRecompensaAcreditada() { return recompensaAcreditada; }
+    public synchronized boolean isRecompensaAcreditada() { return recompensaAcreditada; }
 
-    boolean marcarRecompensaAcreditada() {
+    synchronized boolean marcarRecompensaAcreditada() {
         if (!"completada".equals(estado) || recompensaAcreditada) return false;
         recompensaAcreditada = true;
         return true;
     }
 
-    public String consultarEstado() { return estado; }
-    public String getEstado() { return estado; }
+    public synchronized String consultarEstado() { return estado; }
+    public synchronized String getEstado() { return estado; }
     public Reto getReto() { return reto; }
 }

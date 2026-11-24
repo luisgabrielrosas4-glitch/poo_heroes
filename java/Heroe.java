@@ -8,11 +8,11 @@ public abstract class Heroe extends Personaje {
         this.intentosRestantes = intentosRestantes;
     }
 
-    public int consultarSaldo() {
+    public synchronized int consultarSaldo() {
         return saldo;
     }
 
-    public boolean pagar(int costo) {
+    public synchronized boolean pagar(int costo) {
         if (saldo >= costo) {
             saldo -= costo;
             return true;
@@ -25,8 +25,10 @@ public abstract class Heroe extends Personaje {
         return mision.getPartida().acreditarRecompensa(this, mision);
     }
 
-    void recibirRecompensa(int cantidad) {
+    final synchronized boolean recibirRecompensa(int cantidad) {
+        if (cantidad <= 0 || saldo > Integer.MAX_VALUE - cantidad) return false;
         saldo += cantidad;
+        return true;
     }
 
     public void restarIntento() {

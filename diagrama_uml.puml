@@ -11,7 +11,7 @@ abstract class Heroe {
   # saldo: int
   + consultarSaldo(): int
   + acreditarRecompensa(m: Mision): boolean
-  ~ recibirRecompensa(cantidad: int): void
+  ~ recibirRecompensa(cantidad: int): boolean
 }
 
 class Batman {
@@ -53,9 +53,10 @@ Mision --> Partida : pertenece a
 Heroe ..> Partida : solicita cobro
 
 note bottom of Partida
-  Verifica la misión, paga al héroe
-  y suma el total en una sola operación.
-  Si ya se cobró, devuelve false.
+  El pago se protege de cobros simultáneos.
+  Revisa los límites antes de sumar.
+  Marca la misión pagada al completar el abono.
+  Si no se puede pagar, devuelve false.
 end note
 
 note right of Mision

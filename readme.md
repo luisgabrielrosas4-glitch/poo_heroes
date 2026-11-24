@@ -92,3 +92,16 @@ Pruebas de Java desde `java/`:
 javac NivelDificultad.java Personaje.java Reto.java Heroe.java Batman.java Mision.java Partida.java TestRecompensaMision.java
 java TestRecompensaMision
 ```
+
+### Comprobaciones de seguridad
+
+El pago se protege para que dos cobros simultáneos no dupliquen ni pierdan créditos.
+Si el saldo del héroe o el total de la partida pasarían de **2 147 483 647**,
+el cobro devuelve `false` sin marcar la misión como pagada. En Python se usa el
+mismo límite para que ambos lenguajes respondan igual.
+
+Si falla la entrega del saldo, la misión no queda marcada como pagada y se puede
+volver a intentar. En Python, un error del método interno devuelve `false` y
+se restaura el saldo anterior.
+
+Se mantienen las pruebas de recompensas del T06, sin tocar los retos T05 y T07.

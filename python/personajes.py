@@ -2,6 +2,7 @@ from abc import ABC, abstractmethod
 from retos import Reto, RetoSecuencia
 from mision import Mision
 from typing import List
+from threading import RLock
 
 class Personaje(ABC):
     def __init__(self, nombre: str):
@@ -12,16 +13,18 @@ class Heroe(Personaje, ABC):
     def __init__(self, nombre: str, saldo: int = 100):
         super().__init__(nombre)
         self.saldo = saldo
+        self._saldo_lock = RLock()
 
     @abstractmethod
     def consultar_saldo(self) -> int:
         return self.saldo
 
     def pagar(self, costo: int) -> bool:
-        if self.saldo >= costo:
-            self.saldo -= costo
-            return True
-        return False
+        with self._saldo_lock:
+            if self.saldo >= costo:
+                self.saldo -= costo
+                return True
+            return False
 
     def acreditar_recompensa(self, mision: Mision) -> bool:
         if mision is None or mision.partida is None:
@@ -29,7 +32,11 @@ class Heroe(Personaje, ABC):
         return mision.partida.acreditar_recompensa(self, mision)
 
     def _recibir_recompensa(self, cantidad):
-        self.saldo += cantidad
+        with self._saldo_lock:
+            if cantidad <= 0 or self.saldo > 2147483647 - cantidad:
+                return False
+            self.saldo += cantidad
+            return True
 
 
 class Batman(Heroe):
@@ -37,8 +44,9 @@ class Batman(Heroe):
         super().__init__("Batman", 100)
         
     def consultar_saldo(self) -> int:
-        return self.saldo
-    
+        with self._saldo_lock:
+            return self.saldo
+
     def resolver_mision(self, mision: Mision, respuesta: str) -> bool:
         return mision.procesar_intento(respuesta)
 

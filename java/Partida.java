@@ -10,22 +10,27 @@ public class Partida {
         this.recompensasGlobales = 0;
     }
 
-    public void agregarMision(Mision m) {
-        if (m == null || m.getPartida() != null) return;
-        m.asignarPartida(this);
-        misiones.add(m);
+    public synchronized void agregarMision(Mision m) {
+        if (m != null && m.asignarPartida(this)) misiones.add(m);
     }
 
-    public boolean acreditarRecompensa(Heroe heroe, Mision mision) {
+    public synchronized boolean acreditarRecompensa(Heroe heroe, Mision mision) {
         if (heroe == null || mision == null || mision.getPartida() != this
                 || !misiones.contains(mision)) return false;
-        if (!mision.marcarRecompensaAcreditada()) return false;
-        heroe.recibirRecompensa(mision.getRecompensa());
-        recompensasGlobales += mision.getRecompensa();
-        return true;
+
+        synchronized (mision) {
+            if (!"completada".equals(mision.getEstado())
+                    || mision.isRecompensaAcreditada()) return false;
+            int cantidad = mision.getRecompensa();
+            if (cantidad <= 0 || recompensasGlobales > Integer.MAX_VALUE - cantidad) return false;
+            if (!heroe.recibirRecompensa(cantidad)) return false;
+            mision.marcarRecompensaAcreditada();
+            recompensasGlobales += cantidad;
+            return true;
+        }
     }
 
-    public int getRecompensasGlobales() { return recompensasGlobales; }
+    public synchronized int getRecompensasGlobales() { return recompensasGlobales; }
 
     public void iniciarJuego() {
         // TODO: Implementar inicio del juego
