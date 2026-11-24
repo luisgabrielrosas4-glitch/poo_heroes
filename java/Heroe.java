@@ -21,9 +21,12 @@ public abstract class Heroe extends Personaje {
     }
 
     public boolean acreditarRecompensa(Mision mision) {
-        if (mision == null || !mision.marcarRecompensaAcreditada()) return false;
-        saldo += mision.getRecompensa();
-        return true;
+        if (mision == null || mision.getPartida() == null) return false;
+        return mision.getPartida().acreditarRecompensa(this, mision);
+    }
+
+    void recibirRecompensa(int cantidad) {
+        saldo += cantidad;
     }
 
     public void restarIntento() {

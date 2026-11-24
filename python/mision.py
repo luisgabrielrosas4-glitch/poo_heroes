@@ -13,6 +13,7 @@ class Mision:
         self.errores = 0
         self.recompensa = recompensa
         self.recompensa_acreditada = False
+        self.partida = None
 
     def procesar_intento(self, respuesta: str) -> bool:
         if self.estado != "activa":
@@ -36,6 +37,10 @@ class Mision:
     def completar(self) -> None:
         if self.estado == "activa":
             self.estado = "completada"
+
+    def asignar_partida(self, partida):
+        if self.partida is None:
+            self.partida = partida
 
     def marcar_recompensa_acreditada(self) -> bool:
         if self.estado != "completada" or self.recompensa_acreditada:

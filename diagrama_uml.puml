@@ -11,11 +11,14 @@ abstract class Heroe {
   # saldo: int
   + consultarSaldo(): int
   + acreditarRecompensa(m: Mision): boolean
+  ~ recibirRecompensa(cantidad: int): void
 }
 
 class Batman {
   + resolverMision(m: Mision, respuesta: String): boolean
 }
+
+abstract class Reto
 
 class Mision {
   - id: String
@@ -23,9 +26,12 @@ class Mision {
   - reto: Reto
   - recompensa: int
   - recompensaAcreditada: boolean
+  - partida: Partida
   + Mision(id: String, reto: Reto)
   + Mision(id: String, reto: Reto, recompensa: int)
   + completar(): void
+  + getPartida(): Partida
+  ~ asignarPartida(partida: Partida): void
   + getRecompensa(): int
   + isRecompensaAcreditada(): boolean
   + marcarRecompensaAcreditada(): boolean
@@ -39,27 +45,22 @@ class Partida {
   + getRecompensasGlobales(): int
 }
 
-abstract class Reto {
-  + evaluarRespuesta(respuesta: String): boolean
-}
-
 Personaje <|-- Heroe
 Heroe <|-- Batman
-Mision --> Reto : contiene
-Partida "1" o-- "0..*" Mision : guarda
-Heroe ..> Mision : cobra
-Partida ..> Heroe : acredita
-
-note right of Mision
-  Guarda el monto y si ya se pagó.
-  No paga si está activa, bloqueada
-  o si la recompensa ya se cobró.
-end note
+Mision --> Reto
+Partida "1" o-- "0..*" Mision : registra
+Mision --> Partida : pertenece a
+Heroe ..> Partida : solicita cobro
 
 note bottom of Partida
-  Suma el total solamente cuando
-  el héroe acredita la recompensa.
-  En Python los métodos usan
-  nombres con guion bajo.
+  Verifica la misión, paga al héroe
+  y suma el total en una sola operación.
+  Si ya se cobró, devuelve false.
+end note
+
+note right of Mision
+  Una misión solo puede estar en
+  una partida. En Python los nombres
+  de los métodos usan guion bajo.
 end note
 @enduml

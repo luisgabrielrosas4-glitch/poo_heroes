@@ -68,6 +68,46 @@ class TestRecompensas(unittest.TestCase):
         self.assertFalse(p.acreditar_recompensa(b, ajena))
         self.assertFalse(ajena.recompensa_acreditada)
 
+    def test_directo_antes_de_partida(self):
+        partida, batman, otro = Partida(), Batman(), Batman()
+        mision = Mision("directa", RetoPrueba(), 30)
+        partida.agregar_mision(mision)
+        mision.completar()
+        self.assertTrue(batman.acreditar_recompensa(mision))
+        self.assertEqual((batman.consultar_saldo(), partida.recompensas_globales), (130, 30))
+        self.assertFalse(partida.acreditar_recompensa(batman, mision))
+        self.assertFalse(batman.acreditar_recompensa(mision))
+        self.assertFalse(otro.acreditar_recompensa(mision))
+        self.assertFalse(partida.acreditar_recompensa(otro, mision))
+        self.assertEqual((batman.consultar_saldo(), otro.consultar_saldo(), partida.recompensas_globales), (130, 100, 30))
+
+    def test_partida_antes_de_directo(self):
+        partida, batman = Partida(), Batman()
+        mision = Mision("inversa", RetoPrueba(), 30)
+        partida.agregar_mision(mision)
+        mision.completar()
+        self.assertTrue(partida.acreditar_recompensa(batman, mision))
+        self.assertFalse(batman.acreditar_recompensa(mision))
+        self.assertFalse(partida.acreditar_recompensa(batman, mision))
+        self.assertEqual((batman.consultar_saldo(), partida.recompensas_globales), (130, 30))
+
+    def test_cobro_directo_sin_partida(self):
+        batman = Batman()
+        mision = Mision("sin partida", RetoPrueba(), 30)
+        mision.completar()
+        self.assertFalse(batman.acreditar_recompensa(mision))
+        self.assertEqual(batman.consultar_saldo(), 100)
+
+    def test_no_duplicar_mision_en_otra_partida(self):
+        primera, segunda, batman = Partida(), Partida(), Batman()
+        mision = Mision("unica", RetoPrueba(), 30)
+        primera.agregar_mision(mision)
+        segunda.agregar_mision(mision)
+        mision.completar()
+        self.assertFalse(segunda.acreditar_recompensa(batman, mision))
+        self.assertTrue(batman.acreditar_recompensa(mision))
+        self.assertEqual((primera.recompensas_globales, segunda.recompensas_globales), (30, 0))
+
     def test_recompensa_invalida(self):
         with self.assertRaises(ValueError):
             Mision("8", RetoPrueba(), 0)

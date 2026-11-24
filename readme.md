@@ -67,13 +67,18 @@ Bienvenido al repositorio del caso de estudio de la Unidad II. Este código base
 
 ## Recompensas de las misiones (T06)
 
-Cada misión tiene una recompensa. Si no se indica el monto al crearla, vale 10 créditos.
+Cada misión tiene una recompensa; si no se indica, son 10 créditos.
 
-- **Mision:** guarda el monto y si la recompensa ya se entregó.
-- **Heroe:** recibe los créditos solamente si la misión está completada y no se han cobrado antes. En ese caso `acreditarRecompensa` devuelve `true`; si no, devuelve `false`.
-- **Partida:** llama al héroe para entregar la recompensa y suma al total `recompensasGlobales` solamente cuando el pago se hizo. La misión tiene que estar agregada a esa partida.
+Al agregar una misión a `Partida`, queda registrada en esa partida y no se puede agregar a otra. Así, los dos métodos públicos de cobro hacen lo mismo:
 
-Por ejemplo, si Batman empieza con 100 créditos y completa una misión que paga 30, después de cobrar queda con 130 y el total de la partida pasa a 30. Si intenta cobrarla de nuevo, ambos números se quedan igual. Una misión activa o bloqueada no paga nada.
+- `Heroe.acreditarRecompensa(mision)`: pide a la partida de esa misión que entregue el pago.
+- `Partida.acreditarRecompensa(heroe, mision)`: comprueba que la misión le pertenezca, que esté completada y que no se haya cobrado. Si procede, aumenta el saldo, marca el pago y suma al total de la partida.
+
+Los dos devuelven `true` solamente la primera vez. Si se intenta repetir el cobro, hacerlo con otro héroe o cobrar una misión activa, bloqueada o sin partida, devuelven `false` y no cambian los totales.
+
+Ejemplo: Batman tiene 100 créditos y completa una misión de 30. Puede cobrar primero desde Héroe o desde Partida; termina con **130 créditos y 30 acumulados**. Un segundo cobro por cualquiera de los métodos no cambia nada.
+
+En Python se utilizan los nombres `acreditar_recompensa` y `recompensas_globales`.
 
 Pruebas de Python desde la raíz:
 

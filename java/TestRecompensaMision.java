@@ -48,6 +48,43 @@ public class TestRecompensaMision {
         try { new Mision("6", new RetoPrueba(), 0); }
         catch (IllegalArgumentException e) { invalida = true; }
         comprobar(invalida, "recompensa cero");
+        // Primero cobra directamente el heroe y luego se intenta por Partida.
+        Partida pDirecta = new Partida();
+        Batman hDirecto = new Batman();
+        Batman hDistinto = new Batman();
+        Mision mDirecta = new Mision("directa", new RetoPrueba(), 30);
+        pDirecta.agregarMision(mDirecta);
+        mDirecta.completar();
+        comprobar(hDirecto.acreditarRecompensa(mDirecta), "cobro directo");
+        comprobar(hDirecto.consultarSaldo() == 130, "saldo del cobro directo");
+        comprobar(pDirecta.getRecompensasGlobales() == 30, "total del cobro directo");
+        comprobar(!pDirecta.acreditarRecompensa(hDirecto, mDirecta), "directo y luego partida");
+        comprobar(!hDirecto.acreditarRecompensa(mDirecta), "repetir directo");
+        comprobar(!hDistinto.acreditarRecompensa(mDirecta), "otro heroe directo");
+        comprobar(!pDirecta.acreditarRecompensa(hDistinto, mDirecta), "otro heroe partida");
+        comprobar(hDistinto.consultarSaldo() == 100, "otro heroe sin premio");
+        comprobar(hDirecto.consultarSaldo() == 130 && pDirecta.getRecompensasGlobales() == 30, "sin cobro doble");
+
+        // Primero se cobra con Partida y después directamente.
+        Partida pInversa = new Partida();
+        Batman hInverso = new Batman();
+        Mision mInversa = new Mision("inversa", new RetoPrueba(), 30);
+        pInversa.agregarMision(mInversa);
+        mInversa.completar();
+        comprobar(pInversa.acreditarRecompensa(hInverso, mInversa), "primero partida");
+        comprobar(!hInverso.acreditarRecompensa(mInversa), "despues directo");
+        comprobar(!pInversa.acreditarRecompensa(hInverso, mInversa), "repetir partida");
+        comprobar(hInverso.consultarSaldo() == 130 && pInversa.getRecompensasGlobales() == 30, "totales inversos");
+
+        Mision noRegistrada = new Mision("externa", new RetoPrueba(), 20);
+        noRegistrada.completar();
+        comprobar(!hDirecto.acreditarRecompensa(noRegistrada), "sin partida no paga");
+        Partida otraPartida = new Partida();
+        otraPartida.agregarMision(mDirecta);
+        comprobar(!otraPartida.acreditarRecompensa(hDirecto, mDirecta), "no mover mision a otra partida");
+        comprobar(otraPartida.getRecompensasGlobales() == 0, "otra partida sin premio");
+        comprobar(!hDirecto.acreditarRecompensa(bloqueada), "bloqueada directa");
+        comprobar(batman.consultarSaldo() == 180 && partida.getRecompensasGlobales() == 80, "totales originales");
         System.out.println("Pruebas de recompensas correctas");
     }
 }

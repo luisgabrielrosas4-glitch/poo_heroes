@@ -10,6 +10,7 @@ public class Mision {
     private int errores;
     private int recompensa;
     private boolean recompensaAcreditada;
+    private Partida partida;
 
     public Mision(String id, Reto reto) {
         this(id, reto, 10);
@@ -24,6 +25,7 @@ public class Mision {
         this.errores = 0;
         this.recompensa = recompensa;
         this.recompensaAcreditada = false;
+        this.partida = null;
     }
 
     public boolean procesarIntento(String respuesta) {
@@ -52,6 +54,12 @@ public class Mision {
         if ("activa".equals(estado)) {
             estado = "completada";
         }
+    }
+
+    public Partida getPartida() { return partida; }
+
+    void asignarPartida(Partida partida) {
+        if (this.partida == null) this.partida = partida;
     }
 
     public int getRecompensa() { return recompensa; }

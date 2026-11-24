@@ -11,12 +11,16 @@ public class Partida {
     }
 
     public void agregarMision(Mision m) {
+        if (m == null || m.getPartida() != null) return;
+        m.asignarPartida(this);
         misiones.add(m);
     }
 
     public boolean acreditarRecompensa(Heroe heroe, Mision mision) {
-        if (heroe == null || mision == null || !misiones.contains(mision)) return false;
-        if (!heroe.acreditarRecompensa(mision)) return false;
+        if (heroe == null || mision == null || mision.getPartida() != this
+                || !misiones.contains(mision)) return false;
+        if (!mision.marcarRecompensaAcreditada()) return false;
+        heroe.recibirRecompensa(mision.getRecompensa());
         recompensasGlobales += mision.getRecompensa();
         return true;
     }
