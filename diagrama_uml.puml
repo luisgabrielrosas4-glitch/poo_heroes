@@ -22,12 +22,32 @@ class RetoSecuencia {
   - respuestaEsperada: int
   + RetoSecuencia(dificultad: NivelDificultad)
   + generarProblema(): void
+  + aumentarDificultad(): void
   + mostrarSecuencia(): String
   + evaluarRespuesta(respuesta: String): boolean
 }
 
+abstract class Villano {
+  + plantearMision(id: String, r: Reto): Mision
+  + complicarReto(r: Reto): void
+}
+
+class Joker {
+  + complicarReto(r: Reto): void
+}
+
+class Mision {
+  - reto: Reto
+  + procesarIntento(respuesta: String): boolean
+}
+
 Reto <|-- RetoSecuencia
+Villano <|-- Joker
 Reto --> NivelDificultad
+Mision --> Reto : contiene
+Villano ..> Mision : crea
+Joker ..> RetoSecuencia : sube nivel
+
 
 note right of RetoSecuencia
   En Python se llaman:
@@ -35,5 +55,6 @@ note right of RetoSecuencia
   generar_problema()
   mostrar_secuencia()
   evaluar_respuesta()
+  aumentar_dificultad()
 end note
 @enduml

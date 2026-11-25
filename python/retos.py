@@ -39,6 +39,10 @@ class RetoSecuencia(Reto):
             self.patron_numerico = [2, 3, 5, 8]
             self.respuesta_esperada = 13
 
+    def aumentar_dificultad(self) -> None:
+        super().aumentar_dificultad()
+        self.generar_problema()
+
     def mostrar_secuencia(self) -> str:
         return ", ".join(str(n) for n in self.patron_numerico) + ", ?"
 

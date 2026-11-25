@@ -24,6 +24,12 @@ public class RetoSecuencia extends Reto {
         }
     }
 
+    @Override
+    public void aumentarDificultad() {
+        super.aumentarDificultad();
+        generarProblema();
+    }
+
     public String mostrarSecuencia() {
         String texto = "";
         for (int numero : patronNumerico) {

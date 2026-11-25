@@ -1,6 +1,7 @@
 import unittest
 from retos import RetoSecuencia
 from nivel_dificultad import NivelDificultad
+from personajes import Joker
 
 
 class TestRetoSecuencia(unittest.TestCase):
@@ -30,8 +31,33 @@ class TestRetoSecuencia(unittest.TestCase):
     def test_cambiar_dificultad(self):
         reto = RetoSecuencia(NivelDificultad.FACIL)
         reto.aumentar_dificultad()
-        reto.generar_problema()
         self.assertEqual(reto.mostrar_secuencia(), "3, 6, 12, 24, ?")
+        self.assertTrue(reto.evaluar_respuesta("48"))
+        self.assertFalse(reto.evaluar_respuesta("10"))
+
+    def test_joker_facil_a_medio(self):
+        reto = RetoSecuencia(NivelDificultad.FACIL)
+        mision = Joker().plantear_mision("media", reto)
+        self.assertIs(mision.reto, reto)
+        self.assertEqual(reto.dificultad, NivelDificultad.MEDIO)
+        self.assertEqual(reto.mostrar_secuencia(), "3, 6, 12, 24, ?")
+        self.assertTrue(reto.evaluar_respuesta("48"))
+        self.assertFalse(reto.evaluar_respuesta("10"))
+        self.assertFalse(mision.procesar_intento("10"))
+        self.assertEqual(mision.consultar_intentos_restantes(), 2)
+        self.assertTrue(mision.procesar_intento("48"))
+        self.assertEqual(mision.estado, "completada")
+
+    def test_joker_medio_a_dificil(self):
+        reto = RetoSecuencia(NivelDificultad.MEDIO)
+        mision = Joker().plantear_mision("dificil", reto)
+        self.assertEqual(reto.dificultad, NivelDificultad.DIFICIL)
+        self.assertEqual(reto.mostrar_secuencia(), "2, 3, 5, 8, ?")
+        self.assertTrue(reto.evaluar_respuesta("13"))
+        self.assertFalse(reto.evaluar_respuesta("48"))
+        self.assertFalse(mision.procesar_intento("48"))
+        self.assertTrue(mision.procesar_intento("13"))
+        self.assertEqual(mision.estado, "completada")
         self.assertTrue(reto.evaluar_respuesta("48"))
 
 
