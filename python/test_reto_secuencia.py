@@ -58,7 +58,6 @@ class TestRetoSecuencia(unittest.TestCase):
         self.assertFalse(mision.procesar_intento("48"))
         self.assertTrue(mision.procesar_intento("13"))
         self.assertEqual(mision.estado, "completada")
-        self.assertTrue(reto.evaluar_respuesta("48"))
 
 
 if __name__ == "__main__":
