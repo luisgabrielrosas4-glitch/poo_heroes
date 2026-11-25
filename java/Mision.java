@@ -11,7 +11,8 @@ public class Mision {
 
     public Mision(String id, Reto reto) {
         this.id = id;
-        this.reto = reto;
+        this.reto = reto instanceof RetoSecuencia
+                ? ((RetoSecuencia) reto).copiar() : reto;
         this.estado = "activa";
         this.pistas = new ArrayList<>();
         this.errores = 0;

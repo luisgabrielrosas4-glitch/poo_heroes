@@ -1,4 +1,5 @@
 import java.util.Arrays;
+import java.util.ArrayList;
 import java.util.List;
 
 public class RetoSecuencia extends Reto {
@@ -28,6 +29,20 @@ public class RetoSecuencia extends Reto {
     public void aumentarDificultad() {
         super.aumentarDificultad();
         generarProblema();
+    }
+
+    @Override
+    public void setDificultad(NivelDificultad nuevaDificultad) {
+        if (nuevaDificultad == null) throw new IllegalArgumentException("Nivel invalido");
+        super.setDificultad(nuevaDificultad);
+        generarProblema();
+    }
+
+    public RetoSecuencia copiar() {
+        RetoSecuencia copia = new RetoSecuencia(dificultad);
+        copia.patronNumerico = new ArrayList<>(patronNumerico);
+        copia.respuestaEsperada = respuestaEsperada;
+        return copia;
     }
 
     public String mostrarSecuencia() {

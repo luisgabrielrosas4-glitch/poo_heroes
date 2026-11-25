@@ -38,3 +38,11 @@ java TestMisionIntentos
 ```
 
 No se cambiaron las firmas de `Reto` ni las reglas de `Mision`.
+
+## Correcciones adicionales
+
+- **Cambiar la dificultad directamente:** `RetoSecuencia.setDificultad()` en Java y asignar `reto.dificultad = NivelDificultad.MEDIO` en Python ahora regeneran la secuencia y la respuesta. El método normal `aumentarDificultad()` también mantiene ambas sincronizadas.
+- **Misiones independientes:** al crear una `Mision` con un `RetoSecuencia`, la misión recibe una **copia** del problema actual. Si más tarde Joker vuelve a aumentar la dificultad del objeto original, la misión anterior conserva sus números y su respuesta. Esto también sirve cuando dos misiones se crean directamente con el mismo reto. El resto de tipos de `Reto` no se modifica.
+- **Validación consistente:** ambos lenguajes aceptan solamente dígitos ASCII (0–9), admiten los caracteres U+0000 a U+0020 en los extremos y rechazan enteros superiores a 2,147,483,647. Por ejemplo, aceptan espacios ASCII o tabulaciones alrededor de `48`, pero no el espacio Unicode U+00A0.
+
+Las pruebas de Java y Python incluyen cambios directos de dificultad, dos misiones con un mismo reto, cambio repetido de Joker, respuestas erróneas y bloqueo por intentos. No se modificaron las firmas de las clases abstractas.

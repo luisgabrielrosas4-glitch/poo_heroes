@@ -1,11 +1,11 @@
-from retos import Reto
+from retos import Reto, RetoSecuencia
 
 class Mision:
     LIMITE_ERRORES = 3
 
     def __init__(self, id_mision: str, reto: Reto):
         self.id_mision = id_mision
-        self.reto = reto
+        self.reto = reto.copiar() if isinstance(reto, RetoSecuencia) else reto
         self.estado = "activa"
         self.pistas = []
         self.errores = 0

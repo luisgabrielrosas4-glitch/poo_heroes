@@ -1,5 +1,5 @@
 @startuml
-title T05 - Reto de secuencias
+title T05 - Secuencias y misiones independientes
 skinparam classAttributeIconSize 0
 skinparam linetype ortho
 
@@ -15,6 +15,7 @@ abstract class Reto {
   + evaluarRespuesta(respuesta: String): boolean
   + generarProblema(): void
   + aumentarDificultad(): void
+  + setDificultad(nivel: NivelDificultad): void
 }
 
 class RetoSecuencia {
@@ -23,21 +24,23 @@ class RetoSecuencia {
   + RetoSecuencia(dificultad: NivelDificultad)
   + generarProblema(): void
   + aumentarDificultad(): void
+  + setDificultad(nivel: NivelDificultad): void
+  + copiar(): RetoSecuencia
   + mostrarSecuencia(): String
   + evaluarRespuesta(respuesta: String): boolean
 }
 
 abstract class Villano {
-  + plantearMision(id: String, r: Reto): Mision
-  + complicarReto(r: Reto): void
+  + plantearMision(id: String, reto: Reto): Mision
+  + complicarReto(reto: Reto): void
 }
-
 class Joker {
-  + complicarReto(r: Reto): void
+  + complicarReto(reto: Reto): void
 }
-
 class Mision {
   - reto: Reto
+  + Mision(id: String, reto: Reto)
+  + getReto(): Reto
   + procesarIntento(respuesta: String): boolean
 }
 
@@ -45,16 +48,21 @@ Reto <|-- RetoSecuencia
 Villano <|-- Joker
 Reto --> NivelDificultad
 Mision --> Reto : contiene
+Mision ..> RetoSecuencia : copia al crear misión
 Villano ..> Mision : crea
-Joker ..> RetoSecuencia : sube nivel
-
+Joker ..> RetoSecuencia : aumenta dificultad
 
 note right of RetoSecuencia
-  En Python se llaman:
-  patron_numerico, respuesta_esperada
-  generar_problema()
-  mostrar_secuencia()
-  evaluar_respuesta()
-  aumentar_dificultad()
+  Al cambiar el nivel se regeneran
+  la secuencia visible y la respuesta.
+  copiar() conserva el problema
+  sin compartir el estado mutable.
+end note
+
+note bottom of RetoSecuencia
+  En Python: patron_numerico,
+  respuesta_esperada, generar_problema(),
+  aumentar_dificultad(), mostrar_secuencia().
+  dificultad es una propiedad con setter.
 end note
 @enduml
