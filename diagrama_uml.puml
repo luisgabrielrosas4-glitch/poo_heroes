@@ -6,8 +6,14 @@ skinparam linetype ortho
 abstract class Reto {
   # descripcion: String
   # dificultad: NivelDificultad
+  - mision: Mision
   + evaluarRespuesta(respuesta: String): boolean
   + generarProblema(): void
+  + aumentarDificultad(): void
+  + setDificultad(d: NivelDificultad): void
+  ~ asociarMision(m: Mision): void
+  + admiteModificaciones(): boolean
+  # exigirModificable(): void
 }
 
 class RetoRutaCorta {
@@ -17,6 +23,7 @@ class RetoRutaCorta {
   + RetoRutaCorta()
   + RetoRutaCorta(origen: String, destino: String)
   + agregarTramo(a: String, b: String, costo: int): void
+  + copiarGrafo(): Map
   + costoMinimo(): long
   + bloquearTramo(a: String, b: String): boolean
   + evaluarRespuesta(respuesta: String): boolean
@@ -43,24 +50,48 @@ class GreenGoblin {
   + plantearMision(id: String, reto: Reto): Mision
 }
 
+class Joker {
+  + complicarReto(reto: Reto): void
+}
+
 class Mision {
   - estado: String
   - reto: Reto
   + Mision(id: String, reto: Reto)
   + aplicarDificultad(d: Dificultad): boolean
+  + estaActiva(): boolean
 }
 
 Reto <|-- RetoRutaCorta
 Villano <|-- GreenGoblin
+Villano <|-- Joker
 Dificultad <|.. GreenGoblin
 Mision --> Reto : contiene
+Reto --> "0..1" Mision : contexto (se registra\nen el constructor de Mision)
 Mision ..> Dificultad : aplica si está activa
 GreenGoblin ..> RetoRutaCorta : bloquea un tramo
+Joker ..> Reto : aumentarDificultad() si admiteModificaciones()
 
 note right of RetoRutaCorta
   El grafo guarda los tramos y sus costos.
   Se usa Dijkstra para el camino mínimo.
   Python: agregar_tramo(), costo_minimo(),
-  bloquear_tramo(), evaluar_respuesta().
+  bloquear_tramo(), evaluar_respuesta(),
+  copiar_grafo().
+end note
+
+note bottom of Reto
+  Contrato de contexto: Mision se registra como contexto del
+  reto en su constructor (un reto, una misión; otra distinta
+  lanza IllegalStateException). admiteModificaciones() consulta
+  en vivo: true sin misión o con misión "activa".
+  Con misión "completada" o "bloqueada":
+  - bloquearTramo() devuelve false y no toca el grafo.
+  - agregarTramo(), generarProblema(), aumentarDificultad()
+    y setDificultad() lanzan IllegalStateException.
+  - GreenGoblin.aplicar()/complicarReto() y
+    Joker.complicarReto() no tienen efecto.
+  Python: admite_modificaciones(), _asociar_mision(),
+  _exigir_modificable(); la excepción es RuntimeError.
 end note
 @enduml
