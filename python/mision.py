@@ -9,6 +9,13 @@ class Mision:
         self.estado = "activa"
         self.pistas = []
         self.errores = 0
+        # Los retos de prueba sin la clase base Reto no tienen contexto de misión.
+        asociar = getattr(reto, "_asociar_mision", None)
+        if asociar is not None:
+            asociar(self)
+
+    def esta_activa(self) -> bool:
+        return self.estado == "activa"
 
     def procesar_intento(self, respuesta: str) -> bool:
         if self.estado != "activa":
@@ -22,7 +29,7 @@ class Mision:
         return False
 
     def aplicar_dificultad(self, dificultad):
-        if self.estado != "activa":
+        if not self.esta_activa():
             return False
         return dificultad.aplicar(self.reto)
 
