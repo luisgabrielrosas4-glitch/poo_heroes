@@ -83,7 +83,24 @@ Se usa Dijkstra para encontrar el costo menor, desde A hasta D.
 - A-B-D cuesta 6, así que no es la mejor al inicio.
 - Green Goblin bloquea B-C y la nueva ruta correcta es A-B-D, costo 6.
 - Si bloquear un tramo deja el destino sin acceso, se cancela el bloqueo.
-- Mision revisa que esté activa antes de aplicar Dificultad. No se cambió la firma aplicar(Reto).
+- No se cambió la firma de ningún método existente (`Dificultad.aplicar(Reto)`, `Villano.complicarReto(Reto)`, etc.).
+
+### Contrato: el reto respeta el estado de su misión
+
+El estado de la misión se protege en el propio `Reto`, no solo en `Mision`, para que llamar al villano directamente (`GreenGoblin.complicarReto(reto)` o `GreenGoblin.aplicar(reto)`) no evite la validación.
+
+- **Cómo se da el contexto:** `Mision` se registra como contexto de su reto en su constructor. El código que usa el reto no tiene que pasar nada ni puede olvidarlo. Un reto pertenece a una sola misión; asociarlo a otra distinta lanza `IllegalStateException` (Python: `RuntimeError`).
+- **Cómo se valida:** `Reto.admiteModificaciones()` (Python: `admite_modificaciones()`) consulta el estado de la misión en vivo. Es `true` si el reto no tiene misión (todavía se está preparando) o si la misión está `activa`.
+- **Misión `completada` o `bloqueada`:** el reto conserva su grafo, sus costos y su solución.
+    - `bloquearTramo()` devuelve `false` sin tocar el grafo.
+    - `GreenGoblin.aplicar()` devuelve `false`, y `GreenGoblin.complicarReto()` y `Joker.complicarReto()` no tienen efecto, porque son `void`.
+    - `Mision.aplicarDificultad()` devuelve `false` (revisa antes, sin llegar al reto).
+    - `agregarTramo()`, `generarProblema()`, `aumentarDificultad()` y `setDificultad()` lanzan `IllegalStateException` (Python: `RuntimeError`).
+- **Misión `activa`:** el obstáculo se aplica por cualquiera de las dos vías, siempre que el destino siga accesible.
+- `copiarGrafo()` (Python: `copiar_grafo()`) devuelve una copia independiente de los tramos para poder comprobar que no cambiaron.
+- Se agregaron métodos concretos a `Reto`; no se modificó ninguna firma existente.
+
+Caso de aceptación: se completa la misión con `A-B-C-D` (costo mínimo 5) y se intenta aplicar el obstáculo de Green Goblin. La misión sigue `completada`, el costo mínimo sigue en 5 y `A-B-C-D` sigue siendo la respuesta correcta.
 
 Pruebas de Python:
 
@@ -91,10 +108,17 @@ Pruebas de Python:
 python -m unittest discover -s python -p "test_ruta_corta.py" -v
 ```
 
+Para las pruebas de Python también se pueden correr todas desde `python/`:
+
+```bash
+cd python
+python -m unittest discover -s . -p "test_*.py" -v
+```
+
 Pruebas de Java:
 
 ```bash
 cd java
-javac NivelDificultad.java Personaje.java Reto.java RetoSecuencia.java Dificultad.java Mision.java Villano.java RetoRutaCorta.java GreenGoblin.java TestRutaCorta.java
+javac NivelDificultad.java Personaje.java Reto.java RetoSecuencia.java Dificultad.java Mision.java Villano.java Joker.java RetoRutaCorta.java GreenGoblin.java TestRutaCorta.java
 java TestRutaCorta
 ```
