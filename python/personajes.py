@@ -57,7 +57,7 @@ class Joker(Villano):
         super().__init__("Joker", "RetoSecuencia")
 
     def complicar_reto(self, reto: Reto) -> None:
-        if isinstance(reto, RetoSecuencia):
+        if isinstance(reto, RetoSecuencia) and reto.admite_modificaciones():
             reto.aumentar_dificultad()
             print("¡El Joker ha complicado la secuencia numérica!")
 
@@ -74,6 +74,7 @@ class GreenGoblin(Villano, Dificultad):
         return reto.bloquear_tramo(self.a, self.b)
 
     def complicar_reto(self, reto):
+        # Sin efecto si la misión del reto no está activa (la firma None no cambia).
         self.aplicar(reto)
 
     def plantear_mision(self, id_mision, reto):
