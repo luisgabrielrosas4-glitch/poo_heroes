@@ -1,6 +1,6 @@
 import unittest
 from mision import Mision
-from personajes import GreenGoblin
+from personajes import GreenGoblin, Joker
 from reto_ruta_corta import RetoRutaCorta
 from retos import RetoSecuencia
 from nivel_dificultad import NivelDificultad
@@ -56,6 +56,98 @@ class TestRutaCorta(unittest.TestCase):
         reto = RetoRutaCorta()
         GreenGoblin().plantear_mision("6", reto)
         self.assertTrue(reto.evaluar_respuesta("A-B-D"))
+
+
+class TestContextoMision(unittest.TestCase):
+    def assertIntacto(self, reto, grafo_inicial):
+        self.assertEqual(reto.copiar_grafo(), grafo_inicial)
+        self.assertEqual(reto.costo_minimo(), 5)
+        self.assertTrue(reto.evaluar_respuesta("A-B-C-D"))
+        self.assertFalse(reto.evaluar_respuesta("A-B-D"))
+
+    def test_aceptacion_completada_con_obstaculo(self):
+        reto = RetoRutaCorta()
+        mision = Mision("c1", reto)
+        inicial = reto.copiar_grafo()
+        self.assertTrue(mision.procesar_intento("A-B-C-D"))
+        self.assertEqual(mision.consultar_estado(), "completada")
+        self.assertEqual(reto.costo_minimo(), 5)
+
+        goblin = GreenGoblin()
+        # Llamada mediante Mision.
+        self.assertFalse(mision.aplicar_dificultad(goblin))
+        self.assertIntacto(reto, inicial)
+        # Acceso directo que antes evitaba la validación.
+        goblin.complicar_reto(reto)
+        self.assertIntacto(reto, inicial)
+        self.assertFalse(goblin.aplicar(reto))
+        self.assertIntacto(reto, inicial)
+        self.assertFalse(reto.bloquear_tramo("B", "C"))
+        self.assertIntacto(reto, inicial)
+        self.assertEqual(mision.consultar_estado(), "completada")
+
+    def test_otras_operaciones_rechazadas_en_mision_cerrada(self):
+        reto = RetoRutaCorta()
+        mision = Mision("c1", reto)
+        inicial = reto.copiar_grafo()
+        mision.completar()
+        with self.assertRaises(RuntimeError):
+            reto.agregar_tramo("A", "D", 1)
+        with self.assertRaises(RuntimeError):
+            reto.generar_problema()
+        with self.assertRaises(RuntimeError):
+            reto.aumentar_dificultad()
+        self.assertEqual(reto.dificultad, NivelDificultad.FACIL)
+        self.assertIntacto(reto, inicial)
+
+    def test_mision_bloqueada_directo_y_por_mision(self):
+        reto = RetoRutaCorta()
+        mision = Mision("c2", reto)
+        inicial = reto.copiar_grafo()
+        for _ in range(3):
+            mision.procesar_intento("mal")
+        self.assertEqual(mision.consultar_estado(), "bloqueada")
+        goblin = GreenGoblin()
+        self.assertFalse(mision.aplicar_dificultad(goblin))
+        goblin.complicar_reto(reto)
+        self.assertFalse(goblin.aplicar(reto))
+        self.assertIntacto(reto, inicial)
+
+    def test_mision_activa_aplica_y_luego_se_congela(self):
+        reto = RetoRutaCorta()
+        mision = Mision("c3", reto)
+        self.assertTrue(GreenGoblin().aplicar(reto))
+        self.assertEqual(reto.costo_minimo(), 6)
+        mision.completar()
+        despues = reto.copiar_grafo()
+        self.assertFalse(GreenGoblin("A", "B").aplicar(reto))
+        self.assertEqual(reto.copiar_grafo(), despues)
+        self.assertEqual(reto.costo_minimo(), 6)
+
+    def test_destino_inaccesible_sigue_rechazado_con_mision_activa(self):
+        reto = RetoRutaCorta("A", "B")
+        reto.agregar_tramo("A", "B", 3)
+        Mision("c4", reto)
+        grafo = reto.copiar_grafo()
+        self.assertFalse(GreenGoblin("A", "B").aplicar(reto))
+        self.assertEqual(reto.copiar_grafo(), grafo)
+        self.assertTrue(reto.evaluar_respuesta("A-B"))
+
+    def test_reto_sin_mision_es_modificable_y_una_mision_por_reto(self):
+        libre = RetoRutaCorta()
+        self.assertTrue(libre.admite_modificaciones())
+        self.assertTrue(GreenGoblin().aplicar(libre))
+
+        reto = RetoRutaCorta()
+        Mision("c5", reto).completar()
+        with self.assertRaises(RuntimeError):
+            Mision("c6", reto)
+
+    def test_joker_respeta_estado_de_mision(self):
+        reto = RetoSecuencia(NivelDificultad.FACIL)
+        Mision("c7", reto).completar()
+        Joker().complicar_reto(reto)
+        self.assertEqual(reto.dificultad, NivelDificultad.FACIL)
 
 
 if __name__ == "__main__":
