@@ -1,5 +1,6 @@
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 public class Mision {
     private static final int LIMITE_ERRORES = 3;
@@ -11,10 +12,11 @@ public class Mision {
 
     public Mision(String id, Reto reto) {
         this.id = id;
-        this.reto = reto;
+        this.reto = Objects.requireNonNull(reto, "reto");
         this.estado = "activa";
         this.pistas = new ArrayList<>();
         this.errores = 0;
+        reto.asociarMision(this);
     }
 
     public boolean procesarIntento(String respuesta) {
@@ -33,8 +35,12 @@ public class Mision {
     }
 
     public boolean aplicarDificultad(Dificultad dificultad) {
-        if (!estado.equals("activa")) return false;
+        if (!estaActiva()) return false;
         return dificultad.aplicar(reto);
+    }
+
+    public boolean estaActiva() {
+        return "activa".equals(estado);
     }
 
     public int consultarIntentosRestantes() {
