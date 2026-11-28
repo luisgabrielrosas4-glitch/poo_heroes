@@ -20,6 +20,11 @@ public class RetoRutaCorta extends Reto {
     }
 
     public void agregarTramo(String a, String b, int costo) {
+        exigirModificable();
+        ponerTramo(a, b, costo);
+    }
+
+    private void ponerTramo(String a, String b, int costo) {
         if (costo <= 0 || a == null || b == null || a.equals(b)
                 || a.contains("-") || b.contains("-")) {
             throw new IllegalArgumentException("Tramo incorrecto");
@@ -28,8 +33,18 @@ public class RetoRutaCorta extends Reto {
         grafo.computeIfAbsent(b, k -> new HashMap<>()).put(a, costo);
     }
 
+    /** Copia independiente de los tramos: modificarla no afecta al reto. */
+    public Map<String, Map<String, Integer>> copiarGrafo() {
+        Map<String, Map<String, Integer>> copia = new HashMap<>();
+        for (Map.Entry<String, Map<String, Integer>> e : grafo.entrySet()) {
+            copia.put(e.getKey(), new HashMap<>(e.getValue()));
+        }
+        return copia;
+    }
+
     @Override
     public void generarProblema() {
+        exigirModificable();
         grafo.clear();
         agregarTramo("A", "B", 2);
         agregarTramo("A", "C", 5);
@@ -82,12 +97,17 @@ public class RetoRutaCorta extends Reto {
         return costo == costoMinimo();
     }
 
+    /**
+     * Quita el tramo a-b. Devuelve false, sin tocar el grafo, si la misión del reto
+     * no está activa, si el tramo no existe o si el destino quedaría inaccesible.
+     */
     public boolean bloquearTramo(String a, String b) {
+        if (!admiteModificaciones()) return false;
         if (!grafo.containsKey(a) || !grafo.get(a).containsKey(b)) return false;
         int costo = grafo.get(a).remove(b);
         grafo.get(b).remove(a);
         if (costoMinimo() == Long.MAX_VALUE) {
-            agregarTramo(a, b, costo);
+            ponerTramo(a, b, costo);
             return false;
         }
         return true;
