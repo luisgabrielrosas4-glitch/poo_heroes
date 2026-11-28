@@ -12,12 +12,21 @@ class RetoRutaCorta(Reto):
             self.generar_problema()
 
     def agregar_tramo(self, a, b, costo):
+        self._exigir_modificable()
+        self._poner_tramo(a, b, costo)
+
+    def _poner_tramo(self, a, b, costo):
         if costo <= 0 or not a or not b or a == b or "-" in a or "-" in b:
             raise ValueError("Tramo incorrecto")
         self.grafo.setdefault(a, {})[b] = costo
         self.grafo.setdefault(b, {})[a] = costo
 
+    def copiar_grafo(self):
+        """Copia independiente de los tramos: modificarla no afecta al reto."""
+        return {nodo: dict(vecinos) for nodo, vecinos in self.grafo.items()}
+
     def generar_problema(self):
+        self._exigir_modificable()
         self.grafo = {}
         self.agregar_tramo("A", "B", 2)
         self.agregar_tramo("A", "C", 5)
@@ -62,11 +71,15 @@ class RetoRutaCorta(Reto):
         return costo == self.costo_minimo()
 
     def bloquear_tramo(self, a, b):
+        """Quita el tramo a-b. Devuelve False, sin tocar el grafo, si la misión del
+        reto no está activa, si el tramo no existe o si el destino quedaría inaccesible."""
+        if not self.admite_modificaciones():
+            return False
         if b not in self.grafo.get(a, {}):
             return False
         costo = self.grafo[a].pop(b)
         self.grafo[b].pop(a)
         if self.costo_minimo() == float("inf"):
-            self.agregar_tramo(a, b, costo)
+            self._poner_tramo(a, b, costo)
             return False
         return True
