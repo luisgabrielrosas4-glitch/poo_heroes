@@ -18,6 +18,7 @@ public class GreenGoblin extends Villano implements Dificultad {
         return ((RetoRutaCorta) reto).bloquearTramo(a, b);
     }
 
+    /** Sin efecto si la misión del reto no está activa (la firma void no cambia). */
     @Override
     public void complicarReto(Reto reto) {
         aplicar(reto);
